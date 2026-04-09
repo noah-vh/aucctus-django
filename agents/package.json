@@ -1,0 +1,23 @@
+{
+  "name": "aucctus-agents",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "start": "tsx server.ts"
+  },
+  "dependencies": {
+    "@mariozechner/pi-agent-core": "^0.65.2",
+    "@mariozechner/pi-ai": "^0.65.2",
+    "@sinclair/typebox": "^0.34.49",
+    "@tavily/core": "^0.7.2",
+    "exa-js": "^2.11.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0"
+  }
+}

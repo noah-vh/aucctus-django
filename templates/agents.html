@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Agents - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">Agents</h1>
+        <p class="mt-1 text-sm text-zinc-400">Research agent system overview</p>
+    </div>
+</div>
+
+<!-- Agent cards grid -->
+<div class="grid gap-4 sm:grid-cols-2 mb-8">
+    {% for agent in agents_data %}
+        {% include "components/agent_card.html" with agent=agent %}
+    {% endfor %}
+</div>
+
+<!-- Separator -->
+<div class="border-t border-white/[0.06] my-8"></div>
+
+<!-- Eval System Overview -->
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-semibold mb-1">Evaluation System</h2>
+        <p class="text-xs text-zinc-400">Quality metrics tracked across every research run</p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+        <!-- Agent Output Quality -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="target" class="h-3.5 w-3.5"></i>
+                    Agent Output Quality
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Coverage recall</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Feature accuracy</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Amount accuracy</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Source diversity</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Reasoning coherence</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                </div>
+                <p class="mt-4 text-[10px] text-zinc-600">Scores populate after research runs</p>
+            </div>
+        </div>
+
+        <!-- System Behavior -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="shield" class="h-3.5 w-3.5"></i>
+                    System Behavior
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Consistency</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Delta accuracy</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Brain integrity</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Idempotency</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                </div>
+                <p class="mt-4 text-[10px] text-zinc-600">Scores populate after research runs</p>
+            </div>
+        </div>
+
+        <!-- Meta-Evals -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="h-3.5 w-3.5"></i>
+                    Meta-Evals
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Sensitivity</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Specificity</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Score distribution</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-zinc-400">Human agreement</span>
+                        <span class="text-[10px] font-mono text-zinc-600">--</span>
+                    </div>
+                </div>
+                <p class="mt-4 text-[10px] text-zinc-600">Scores populate after research runs</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Eval Scorecard -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="zap" class="h-3.5 w-3.5"></i>
+                Latest Eval Scorecard
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            <div class="rounded-xl bg-zinc-800 border border-white/[0.04] p-6 text-center">
+                <p class="text-xs text-zinc-400 mb-2">No evaluations run yet</p>
+                <p class="text-[10px] text-zinc-600 max-w-md mx-auto">
+                    Research a product space to generate evaluation scores. Each run
+                    produces a full scorecard measuring coverage, accuracy, diversity,
+                    reasoning quality, and system integrity.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

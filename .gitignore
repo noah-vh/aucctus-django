@@ -1,0 +1,24 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+*.egg-info/
+
+# Django
+staticfiles/
+
+# Environment
+.env
+.env.local
+
+# Node (agent service)
+agents/node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

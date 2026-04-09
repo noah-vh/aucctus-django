@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.name }} - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">{{ company.name }}</h1>
+        {% if company.description %}
+        <p class="mt-1 text-sm text-zinc-400">{{ company.description }}</p>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-2">
+        {% if company.url %}
+        <a href="{{ company.url }}" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center rounded-lg border border-white/[0.06] bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 transition-colors">
+            <i data-lucide="external-link" class="h-3.5 w-3.5 mr-1.5"></i>
+            Website
+        </a>
+        {% endif %}
+        <button onclick="history.back()"
+                class="inline-flex items-center rounded-lg border border-white/[0.06] bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 transition-colors">
+            <i data-lucide="arrow-left" class="h-3.5 w-3.5 mr-1"></i>
+            Back
+        </button>
+    </div>
+</div>
+
+<!-- Company meta -->
+<div class="flex flex-wrap items-center gap-2 mb-6">
+    {% if company.data_confidence %}
+    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize
+        {% if company.data_confidence == 'high' %}border-emerald-500/30 bg-emerald-500/15 text-emerald-400
+        {% elif company.data_confidence == 'medium' %}border-amber-500/30 bg-amber-500/15 text-amber-400
+        {% else %}border-red-500/30 bg-red-500/10 text-red-400{% endif %}">
+        {{ company.data_confidence }} confidence
+    </span>
+    {% endif %}
+    {% if company.founded_year %}
+    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-[10px] text-zinc-400">
+        Est. {{ company.founded_year }}
+    </span>
+    {% endif %}
+    {% if company.employee_estimate %}
+    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-[10px] text-zinc-400">
+        ~{{ company.employee_estimate }} employees
+    </span>
+    {% endif %}
+    {% if company.pricing_model %}
+    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-[10px] text-zinc-400 capitalize">
+        {{ company.pricing_model }}
+    </span>
+    {% endif %}
+    {% if company.target_segment %}
+    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-[10px] text-zinc-400 capitalize">
+        {{ company.target_segment }}
+    </span>
+    {% endif %}
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+    <!-- Features -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="layers" class="h-3.5 w-3.5 text-zinc-400"></i>
+                Features
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if company.features %}
+            <div class="flex flex-wrap gap-1.5">
+                {% for feature in company.features %}
+                <span class="inline-flex items-center rounded-lg bg-zinc-800 border border-white/[0.04] px-2.5 py-1 text-xs text-zinc-300">{{ feature }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-zinc-400 py-3 text-center">No features tracked</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pricing Details -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="credit-card" class="h-3.5 w-3.5 text-zinc-400"></i>
+                Pricing
+            </h3>
+        </div>
+        <div class="px-4 pb-4 space-y-2">
+            {% if company.pricing_tiers %}
+                {% for tier in company.pricing_tiers %}
+                <div class="rounded-xl bg-zinc-800 border border-white/[0.04] p-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium">{{ tier.name }}</span>
+                        <span class="text-xs font-mono font-medium">{{ tier.price|default:"-" }}</span>
+                    </div>
+                    {% if tier.description %}
+                    <p class="text-[10px] text-zinc-400 mt-0.5">{{ tier.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="rounded-xl bg-zinc-800 border border-white/[0.04] p-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-medium capitalize">{{ company.pricing_model|default:"Unknown" }}</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Linked Ideas -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="lightbulb" class="h-3.5 w-3.5 text-zinc-400"></i>
+                Linked Ideas
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if ideas %}
+            <div class="space-y-2">
+                {% for idea in ideas %}
+                <a href="{% url 'idea_detail' idea.pk %}"
+                   class="flex items-center justify-between gap-2 rounded-xl bg-zinc-800 border border-white/[0.04] p-3 hover:border-white/[0.08] transition-colors block">
+                    <div class="min-w-0">
+                        <p class="text-xs font-medium truncate">{{ idea.description }}</p>
+                    </div>
+                    {% if idea.current_verdict %}
+                        {% include "components/verdict_badge.html" with verdict=idea.current_verdict size="sm" %}
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-zinc-400 py-3 text-center">Not linked to any ideas</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Funding Events -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden" x-data="{ expanded: false }">
+        <div class="p-4 pb-2">
+            <h3 class="flex items-center justify-between text-sm font-semibold">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="dollar-sign" class="h-3.5 w-3.5 text-zinc-400"></i>
+                    Funding History
+                    <span class="text-[10px] font-normal text-zinc-400">{{ funding_events|length }}</span>
+                </span>
+                {% if funding_events|length > 4 %}
+                <button @click="expanded = !expanded" class="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors">
+                    <span x-text="expanded ? 'Show less' : 'View all'"></span>
+                </button>
+                {% endif %}
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if funding_events %}
+            <div class="space-y-2">
+                {% for event in funding_events %}
+                <div {% if forloop.counter > 4 %}x-show="expanded" x-transition{% endif %}
+                     class="flex items-center justify-between gap-2 rounded-xl bg-zinc-800 border border-white/[0.04] p-3">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] shrink-0">{{ event.round }}</span>
+                            {% if event.date %}
+                            <span class="text-[10px] text-zinc-400">{{ event.date }}</span>
+                            {% endif %}
+                        </div>
+                        {% if event.lead_investor %}
+                        <p class="text-[10px] text-zinc-400 mt-0.5">
+                            Lead: <a href="{% url 'investor_detail' event.lead_investor_id %}" class="hover:text-white transition-colors">{{ event.lead_investor }}</a>
+                        </p>
+                        {% endif %}
+                        {% if event.investors %}
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            {% for investor in event.investors %}
+                            <a href="{% url 'investor_detail' investor.pk %}"
+                               class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300 hover:text-white transition-colors">
+                                {{ investor.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs font-medium font-mono shrink-0">
+                        {% if event.amount_usd %}${{ event.amount_usd|floatformat:0 }}{% else %}-{% endif %}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-zinc-400 py-3 text-center">No funding events recorded</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

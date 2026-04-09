@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aucctus
+      POSTGRES_USER: aucctus
+      POSTGRES_PASSWORD: aucctus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - /app/venv
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://aucctus:aucctus@db:5432/aucctus
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      AGENT_SERVICE_URL: http://agents:4000
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+      - /app/venv
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://aucctus:aucctus@db:5432/aucctus
+      CELERY_BROKER_URL: redis://redis:6379/0
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config beat -l info
+    volumes:
+      - .:/app
+      - /app/venv
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://aucctus:aucctus@db:5432/aucctus
+      CELERY_BROKER_URL: redis://redis:6379/0
+
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    env_file: .env
+    environment:
+      AGENT_PORT: "4000"
+      DATABASE_URL: postgresql://aucctus:aucctus@db:5432/aucctus
+
+volumes:
+  postgres_data:

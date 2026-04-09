@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p class="mt-1 text-sm text-zinc-400">Market intelligence overview</p>
+    </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+    <!-- Left column - wider -->
+    <div class="space-y-6 lg:col-span-2">
+        <!-- Quick Research -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="search" class="h-5 w-5"></i>
+                    Quick Research
+                </h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Describe a product space to research</p>
+            </div>
+            <div class="px-4 pb-4">
+                <form hx-post="{% url 'ideas_list' %}" hx-target="body" x-data="{ text: '' }">
+                    {% csrf_token %}
+                    <div class="space-y-3">
+                        <textarea
+                            name="description"
+                            x-model="text"
+                            placeholder="e.g., autonomous delivery robots, AI code generation tools, electric vehicle charging infrastructure..."
+                            rows="3"
+                            class="w-full rounded-lg border border-white/[0.06] bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 resize-none focus:outline-none focus:ring-1 focus:ring-white/10"
+                        ></textarea>
+                        <button
+                            type="submit"
+                            :disabled="!text.trim()"
+                            class="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Research This Space
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tracked Ideas -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="lightbulb" class="h-5 w-5"></i>
+                    Tracked Ideas
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                {% if ideas %}
+                <div class="space-y-2">
+                    {% for idea in ideas %}
+                    <a href="{% url 'idea_detail' idea.pk %}"
+                       class="flex items-center justify-between gap-4 py-2.5 px-3 rounded-xl bg-zinc-800 border border-white/[0.04] hover:border-white/[0.07] transition-colors block">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium truncate">{{ idea.description }}</p>
+                            <p class="text-xs text-zinc-400 mt-0.5">
+                                {% if idea.last_researched_at %}
+                                    Researched {{ idea.last_researched_at|date:"M d, Y" }}
+                                {% else %}
+                                    Not yet researched
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            {% if idea.current_verdict %}
+                                {% include "components/verdict_badge.html" with verdict=idea.current_verdict size="sm" %}
+                            {% endif %}
+                            <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-xs capitalize text-zinc-400">{{ idea.status }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="py-8 text-center text-sm text-zinc-400">
+                    No ideas tracked yet. Start by researching a product space above.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="space-y-6">
+        <!-- Signal Feed -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="zap" class="h-5 w-5"></i>
+                    Signal Feed
+                </h3>
+            </div>
+            <div class="px-2 pb-4">
+                {% if signals %}
+                <div class="space-y-1">
+                    {% for signal in signals %}
+                    <div class="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-zinc-800/50 transition-colors">
+                        <div class="mt-0.5 shrink-0 text-zinc-400">
+                            {% if signal.signal_type == "new_entrant" %}
+                            <i data-lucide="user-plus" class="h-4 w-4"></i>
+                            {% elif signal.signal_type == "funding_spike" %}
+                            <i data-lucide="dollar-sign" class="h-4 w-4"></i>
+                            {% elif signal.signal_type == "growth_acceleration" %}
+                            <i data-lucide="trending-up" class="h-4 w-4"></i>
+                            {% elif signal.signal_type == "acquisition" %}
+                            <i data-lucide="building-2" class="h-4 w-4"></i>
+                            {% elif signal.signal_type == "pivot" %}
+                            <i data-lucide="arrow-right-left" class="h-4 w-4"></i>
+                            {% else %}
+                            <i data-lucide="alert-circle" class="h-4 w-4"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm leading-snug">{{ signal.description }}</p>
+                            {% if signal.idea %}
+                            <p class="text-xs text-zinc-400 mt-0.5 truncate">{{ signal.idea.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="inline-flex items-center rounded-full border px-1.5 py-0 text-[10px] uppercase tracking-wider
+                                {% if signal.severity == 'high' %}bg-red-500/15 text-red-400 border-red-500/30
+                                {% elif signal.severity == 'medium' %}bg-amber-500/15 text-amber-400 border-amber-500/30
+                                {% else %}bg-blue-500/15 text-blue-400 border-blue-500/30{% endif %}">
+                                {{ signal.severity }}
+                            </span>
+                            <span class="text-xs text-zinc-400 tabular-nums whitespace-nowrap">{{ signal.detected_at|timesince }} ago</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-zinc-400">
+                    <i data-lucide="alert-circle" class="h-8 w-8 mx-auto mb-2 opacity-50"></i>
+                    <p class="text-sm">No signals detected yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Active Jobs -->
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="activity" class="h-5 w-5"></i>
+                    Active Jobs
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                {% if active_jobs %}
+                <div class="space-y-2">
+                    {% for job in active_jobs %}
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span class="capitalize">{{ job.job_type|cut:"_" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-zinc-400">No jobs running</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

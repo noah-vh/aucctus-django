@@ -1,0 +1,21 @@
+{% comment %}
+Card wrapper component for consistent styling.
+Usage: wrap content in this for card-like appearance.
+This is a utility partial - most pages build cards inline for flexibility.
+{% endcomment %}
+<div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden {{ extra_class }}">
+    {% if card_title %}
+    <div class="p-4 pb-3">
+        <h3 class="text-sm font-semibold flex items-center gap-2">
+            {% if card_icon %}<i data-lucide="{{ card_icon }}" class="h-4 w-4"></i>{% endif %}
+            {{ card_title }}
+        </h3>
+        {% if card_description %}
+        <p class="text-xs text-zinc-400 mt-0.5">{{ card_description }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+    <div class="{% if card_title %}px-4 pb-4{% else %}p-4{% endif %} {{ content_class }}">
+        {% block card_content %}{% endblock %}
+    </div>
+</div>

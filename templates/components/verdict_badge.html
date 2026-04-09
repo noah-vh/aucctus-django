@@ -1,0 +1,38 @@
+{% comment %}
+Verdict badge component.
+Usage: {% include "components/verdict_badge.html" with verdict="pursue" size="sm" %}
+Accepts: verdict (pursue|watch|pass), size (sm|md|lg, default md)
+{% endcomment %}
+{% if verdict == "pursue" %}
+    {% if size == "sm" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-xs px-2 py-0.5 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Pursue</span>
+    {% elif size == "lg" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-base px-4 py-1.5 font-semibold bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Pursue</span>
+    {% else %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-sm px-3 py-1 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Pursue</span>
+    {% endif %}
+{% elif verdict == "watch" %}
+    {% if size == "sm" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-xs px-2 py-0.5 bg-amber-500/15 text-amber-400 border-amber-500/30">Watch</span>
+    {% elif size == "lg" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-base px-4 py-1.5 font-semibold bg-amber-500/15 text-amber-400 border-amber-500/30">Watch</span>
+    {% else %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-sm px-3 py-1 bg-amber-500/15 text-amber-400 border-amber-500/30">Watch</span>
+    {% endif %}
+{% elif verdict == "pass" %}
+    {% if size == "sm" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-xs px-2 py-0.5 bg-red-500/10 text-red-400 border-red-500/20">Pass</span>
+    {% elif size == "lg" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-base px-4 py-1.5 font-semibold bg-red-500/10 text-red-400 border-red-500/20">Pass</span>
+    {% else %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-sm px-3 py-1 bg-red-500/10 text-red-400 border-red-500/20">Pass</span>
+    {% endif %}
+{% elif verdict %}
+    {% if size == "sm" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 border-zinc-700">{{ verdict }}</span>
+    {% elif size == "lg" %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-base px-4 py-1.5 font-semibold bg-zinc-800 text-zinc-400 border-zinc-700">{{ verdict }}</span>
+    {% else %}
+    <span class="inline-flex items-center rounded-full border font-medium uppercase tracking-wide text-sm px-3 py-1 bg-zinc-800 text-zinc-400 border-zinc-700">{{ verdict }}</span>
+    {% endif %}
+{% endif %}

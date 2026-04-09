@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - Aucctus{% endblock %}
+
+{% block layout %}
+<!-- Chat uses fullBleed layout - no padding, fills entire content area -->
+<div class="flex-1 flex flex-col min-h-0 rounded-2xl bg-card border border-white/[0.04] overflow-hidden">
+    <div class="flex flex-1 min-h-0">
+        <!-- Session sidebar -->
+        <div class="w-52 flex flex-col shrink-0 overflow-hidden border-r border-white/[0.06]">
+            <div class="p-3">
+                <a href="{% url 'chat' %}?action=new"
+                   class="w-full flex items-center justify-start gap-2 rounded-lg border border-white/[0.06] bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                    New Research
+                </a>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <div id="chat-sessions" class="px-2 pb-2 space-y-0.5">
+                    {% if sessions %}
+                        {% for session in sessions %}
+                        <a href="{% url 'chat' %}?session={{ session.pk }}"
+                           class="group flex items-center gap-2 rounded-xl px-3 py-2 text-xs cursor-pointer transition-colors
+                               {% if active_session and active_session.pk == session.pk %}bg-zinc-800 text-white{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-white{% endif %}">
+                            <i data-lucide="message-square" class="h-3.5 w-3.5 shrink-0"></i>
+                            <span class="truncate flex-1">{{ session.title }}</span>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-zinc-400 px-3 py-4 text-center">No chats yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main chat area -->
+        <div class="flex-1 flex flex-col min-w-0 min-h-0" x-data="chatApp()" x-init="init()">
+            <!-- Messages -->
+            <div x-ref="scrollArea" class="flex-1 overflow-y-auto px-6 py-6 min-h-0">
+                {% if messages %}
+                <div id="messages-container" class="mx-auto max-w-2xl space-y-4">
+                    {% for msg in messages %}
+                        {% if msg.role == "user" %}
+                        <div class="flex justify-end">
+                            <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3 max-w-[80%]">
+                                <p class="text-xs leading-relaxed whitespace-pre-wrap">{{ msg.content }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="flex gap-3 justify-start">
+                            <div class="shrink-0 mt-1">
+                                <div class="h-6 w-6 rounded-lg flex items-center justify-center
+                                    {% if msg.agent == 'orchestrator' %}bg-purple-500/15
+                                    {% elif msg.agent == 'incumbents' %}bg-blue-500/15
+                                    {% elif msg.agent == 'funding' %}bg-emerald-500/15
+                                    {% elif msg.agent == 'growth' %}bg-orange-500/15
+                                    {% else %}bg-zinc-800{% endif %}">
+                                    {% if msg.agent == "orchestrator" %}
+                                    <i data-lucide="brain" class="h-3.5 w-3.5 text-purple-500"></i>
+                                    {% elif msg.agent == "incumbents" %}
+                                    <i data-lucide="search" class="h-3.5 w-3.5 text-blue-500"></i>
+                                    {% elif msg.agent == "funding" %}
+                                    <i data-lucide="dollar-sign" class="h-3.5 w-3.5 text-emerald-500"></i>
+                                    {% elif msg.agent == "growth" %}
+                                    <i data-lucide="trending-up" class="h-3.5 w-3.5 text-orange-500"></i>
+                                    {% else %}
+                                    <i data-lucide="bot" class="h-3.5 w-3.5 text-zinc-400"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="max-w-[85%] space-y-1">
+                                {% if msg.agent %}
+                                <span class="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">{{ msg.agent }}</span>
+                                {% endif %}
+                                <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3">
+                                    <div class="text-xs leading-relaxed prose-chat">{{ msg.content|linebreaksbr }}</div>
+                                    {% if msg.idea_id %}
+                                    <a href="{% url 'idea_detail' msg.idea_id %}"
+                                       class="flex items-center gap-1.5 mt-2 pt-2 border-t border-zinc-700/50 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors">
+                                        View full research
+                                        <i data-lucide="arrow-right" class="h-3 w-3"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Empty state -->
+                <div id="chat-empty-state" class="flex flex-col items-center justify-center h-full text-center">
+                    <div class="rounded-xl bg-zinc-800 p-5 mb-6">
+                        <i data-lucide="radar" class="h-10 w-10 text-zinc-400"></i>
+                    </div>
+                    <h2 class="text-xl font-semibold mb-2">Market Intelligence</h2>
+                    <p class="text-zinc-400 text-xs max-w-md leading-relaxed">
+                        Describe a product space and I'll research the incumbents,
+                        funding landscape, and growth trajectory to help you decide
+                        whether to pursue it.
+                    </p>
+                    <div class="mt-6 flex flex-wrap gap-2 justify-center">
+                        <button @click="input = 'autonomous delivery robots'"
+                                class="rounded-md border border-white/[0.06] bg-card px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors">
+                            autonomous delivery robots
+                        </button>
+                        <button @click="input = 'AI code generation tools'"
+                                class="rounded-md border border-white/[0.06] bg-card px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors">
+                            AI code generation tools
+                        </button>
+                        <button @click="input = 'EV charging infrastructure'"
+                                class="rounded-md border border-white/[0.06] bg-card px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors">
+                            EV charging infrastructure
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Streaming events managed by Alpine -->
+                <template x-if="streamEvents.length > 0">
+                    <div class="mx-auto max-w-2xl space-y-4 mt-4">
+                        <template x-for="agentName in Object.keys(groupedStreamEvents)" :key="agentName">
+                            <div class="flex gap-3 justify-start">
+                                <div class="shrink-0 mt-1">
+                                    <div class="h-6 w-6 rounded-lg flex items-center justify-center bg-zinc-800">
+                                        <i data-lucide="bot" class="h-3.5 w-3.5 text-zinc-400"></i>
+                                    </div>
+                                </div>
+                                <div class="max-w-[85%] space-y-1">
+                                    <span class="text-[10px] font-medium text-zinc-400 uppercase tracking-wider" x-text="agentName"></span>
+                                    <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3">
+                                        <template x-for="(event, idx) in groupedStreamEvents[agentName]" :key="idx">
+                                            <div class="text-xs text-zinc-300 mb-1">
+                                                <template x-if="event.type === 'tool_call'">
+                                                    <span class="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                                                        <i data-lucide="wrench" class="h-2.5 w-2.5"></i>
+                                                        <span x-text="event.tool_name || 'tool'"></span>
+                                                    </span>
+                                                </template>
+                                                <template x-if="event.type === 'thinking'">
+                                                    <span class="text-[10px] text-zinc-500 italic" x-text="event.content"></span>
+                                                </template>
+                                                <template x-if="event.type === 'text'">
+                                                    <span x-text="event.content"></span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Loading indicator -->
+                <template x-if="isStreaming && streamEvents.length === 0">
+                    <div class="mx-auto max-w-2xl mt-4">
+                        <div class="flex gap-3">
+                            <div class="shrink-0 mt-1">
+                                <div class="h-6 w-6 rounded-lg bg-zinc-800 flex items-center justify-center">
+                                    <i data-lucide="bot" class="h-3.5 w-3.5 text-zinc-400"></i>
+                                </div>
+                            </div>
+                            <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3">
+                                <div class="flex gap-1">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-500 animate-bounce-dot"></span>
+                                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-500 animate-bounce-dot-2"></span>
+                                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-500 animate-bounce-dot-3"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Input -->
+            <div class="px-6 py-4">
+                <form @submit.prevent="handleSend()" class="mx-auto max-w-2xl">
+                    {% csrf_token %}
+                    <div class="flex items-center gap-2 bg-zinc-800 rounded-xl px-4 py-2.5 border border-white/[0.04]">
+                        <textarea
+                            x-model="input"
+                            @keydown.enter.prevent="if (!$event.shiftKey) handleSend()"
+                            placeholder="Describe a product space to research..."
+                            rows="1"
+                            class="flex-1 resize-none min-h-[32px] max-h-32 border-0 bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none py-1.5"
+                        ></textarea>
+                        <button
+                            type="submit"
+                            :disabled="!input.trim() || isStreaming"
+                            class="shrink-0 h-8 w-8 rounded-lg bg-white text-zinc-900 flex items-center justify-center hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <i data-lucide="send" class="h-3.5 w-3.5"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function chatApp() {
+    return {
+        input: '',
+        isStreaming: false,
+        streamEvents: [],
+        sessionId: '{{ active_session.pk|default:"" }}',
+
+        init() {
+            this.scrollToBottom();
+        },
+
+        scrollToBottom() {
+            this.$nextTick(() => {
+                const el = this.$refs.scrollArea;
+                if (el) el.scrollTop = el.scrollHeight;
+            });
+        },
+
+        get groupedStreamEvents() {
+            const groups = {};
+            for (const event of this.streamEvents) {
+                const agent = event.agent || 'system';
+                if (agent === 'system') continue;
+                if (!groups[agent]) groups[agent] = [];
+                groups[agent].push(event);
+            }
+            return groups;
+        },
+
+        async handleSend() {
+            if (!this.input.trim() || this.isStreaming) return;
+
+            const description = this.input.trim();
+            this.input = '';
+            this.isStreaming = true;
+            this.streamEvents = [];
+
+            // Add user message bubble using safe DOM methods
+            const emptyState = document.getElementById('chat-empty-state');
+            if (emptyState) emptyState.remove();
+
+            let container = document.getElementById('messages-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'messages-container';
+                container.className = 'mx-auto max-w-2xl space-y-4';
+                this.$refs.scrollArea.prepend(container);
+            }
+
+            const userWrapper = document.createElement('div');
+            userWrapper.className = 'flex justify-end';
+            const userBubble = document.createElement('div');
+            userBubble.className = 'rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3 max-w-[80%]';
+            const userText = document.createElement('p');
+            userText.className = 'text-xs leading-relaxed whitespace-pre-wrap';
+            userText.textContent = description;
+            userBubble.appendChild(userText);
+            userWrapper.appendChild(userBubble);
+            container.appendChild(userWrapper);
+            this.scrollToBottom();
+
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                  this.getCookie('csrftoken');
+
+                const response = await fetch('/api/v1/chat/research-stream/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        session_id: this.sessionId,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    this.addAssistantMessage('Error: ' + errText);
+                    return;
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const event = JSON.parse(line.slice(6));
+                            if (event.type === 'done') continue;
+                            this.streamEvents = [...this.streamEvents, event];
+                            this.scrollToBottom();
+                        } catch {
+                            // Skip malformed SSE events
+                        }
+                    }
+                }
+            } catch (error) {
+                this.addAssistantMessage('Error: ' + (error.message || 'Connection lost'));
+            } finally {
+                this.isStreaming = false;
+                this.streamEvents = [];
+                // Reload to get fresh messages from database
+                if (this.sessionId) {
+                    window.location.href = '{% url "chat" %}?session=' + this.sessionId;
+                } else {
+                    window.location.reload();
+                }
+            }
+        },
+
+        addAssistantMessage(content) {
+            let container = document.getElementById('messages-container');
+            if (!container) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex gap-3 justify-start';
+
+            const iconCol = document.createElement('div');
+            iconCol.className = 'shrink-0 mt-1';
+            const iconBox = document.createElement('div');
+            iconBox.className = 'h-6 w-6 rounded-lg bg-zinc-800 flex items-center justify-center';
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', 'bot');
+            icon.className = 'h-3.5 w-3.5 text-zinc-400';
+            iconBox.appendChild(icon);
+            iconCol.appendChild(iconBox);
+
+            const contentCol = document.createElement('div');
+            contentCol.className = 'max-w-[85%]';
+            const bubble = document.createElement('div');
+            bubble.className = 'rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3';
+            const text = document.createElement('div');
+            text.className = 'text-xs leading-relaxed';
+            text.textContent = content;
+            bubble.appendChild(text);
+            contentCol.appendChild(bubble);
+
+            wrapper.appendChild(iconCol);
+            wrapper.appendChild(contentCol);
+            container.appendChild(wrapper);
+
+            lucide.createIcons();
+            this.scrollToBottom();
+        },
+
+        getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    return decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            }
+            return '';
+        },
+    };
+}
+</script>
+{% endblock %}

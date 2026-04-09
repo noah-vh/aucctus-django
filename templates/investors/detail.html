@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ investor.name }} - Aucctus{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto rounded-2xl bg-[#18181b] border border-white/[0.04]">
+    <div class="mx-auto max-w-4xl px-8 py-8">
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-2xl font-bold">{{ investor.name }}</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-400">
+                    {{ investor.type|upper }}
+                </span>
+            </div>
+            {% if investor.thesis %}
+            <p class="text-sm text-zinc-400 mt-2">{{ investor.thesis }}</p>
+            {% endif %}
+        </div>
+
+        {% if investor.focus_areas %}
+        <div class="mb-6">
+            <h2 class="text-sm font-semibold mb-3">Focus Areas</h2>
+            <div class="flex flex-wrap gap-1.5">
+                {% for area in investor.focus_areas %}
+                <span class="px-2 py-0.5 rounded-md bg-zinc-800 text-xs text-zinc-400">{{ area }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if investor.notable_portfolio %}
+        <div class="mb-6">
+            <h2 class="text-sm font-semibold mb-3">Notable Portfolio</h2>
+            <div class="space-y-1.5">
+                {% for company in investor.notable_portfolio %}
+                <p class="text-sm text-zinc-400">{{ company }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+<aside class="fixed inset-y-0 left-0 z-30 flex w-52 flex-col bg-transparent py-5 px-3">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 px-3 mb-6">
+        <i data-lucide="radar" class="h-5 w-5 text-primary"></i>
+        <span class="text-base font-semibold tracking-tight">Aucctus</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 space-y-1">
+        <a href="{% url 'dashboard' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'dashboard' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+            Dashboard
+        </a>
+        <a href="{% url 'chat' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'chat' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="message-square" class="h-4 w-4"></i>
+            Chat
+        </a>
+        <a href="{% url 'ideas_list' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'ideas_list' or request.resolver_match.url_name == 'idea_detail' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="lightbulb" class="h-4 w-4"></i>
+            Ideas
+        </a>
+        <a href="{% url 'monitoring' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'monitoring' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="activity" class="h-4 w-4"></i>
+            Monitoring
+        </a>
+        <a href="{% url 'agents' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'agents' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="bot" class="h-4 w-4"></i>
+            Agents
+        </a>
+        <a href="{% url 'trends' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'trends' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="bar-chart-3" class="h-4 w-4"></i>
+            Trends
+        </a>
+        <a href="{% url 'compare' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'compare' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="arrow-left-right" class="h-4 w-4"></i>
+            Compare
+        </a>
+    </nav>
+
+    <!-- Footer -->
+    <div class="px-3 py-2">
+        <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_2px] shadow-emerald-500/30"></span>
+            <span class="text-[11px] text-zinc-500">System healthy</span>
+        </div>
+    </div>
+</aside>

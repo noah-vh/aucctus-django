@@ -1,0 +1,19 @@
+{% comment %}
+Confidence meter bar component.
+Usage: {% include "components/confidence_meter.html" with value=75 size="md" show_label=True %}
+Accepts: value (0-100), size (sm|md|lg, default md), show_label (default True)
+{% endcomment %}
+<div class="flex items-center gap-3">
+    <div class="flex-1 rounded-full bg-zinc-800 overflow-hidden {% if size == 'sm' %}h-1.5{% elif size == 'lg' %}h-4{% else %}h-2.5{% endif %}">
+        <div class="h-full rounded-full transition-all duration-500 {% if value >= 75 %}bg-emerald-500{% elif value >= 50 %}bg-amber-500{% elif value >= 25 %}bg-orange-500{% else %}bg-red-500{% endif %}"
+             style="width: {{ value }}%"></div>
+    </div>
+    {% if show_label != False %}
+    <div class="flex items-baseline gap-1.5 shrink-0">
+        <span class="font-mono text-sm font-semibold tabular-nums">{{ value }}%</span>
+        <span class="text-xs text-zinc-400">
+            {% if value >= 75 %}High{% elif value >= 50 %}Moderate{% elif value >= 25 %}Low{% else %}Very Low{% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>

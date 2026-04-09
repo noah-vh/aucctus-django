@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Trends - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">Trends</h1>
+        <p class="mt-1 text-sm text-zinc-400">Market trend analysis across tracked spaces</p>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <!-- Trend cards per idea -->
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% if ideas %}
+            {% for idea in ideas %}
+            <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+                <div class="p-4 pb-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <h3 class="text-sm font-semibold leading-snug">{{ idea.description }}</h3>
+                        {% if idea.current_verdict %}
+                            {% include "components/verdict_badge.html" with verdict=idea.current_verdict size="sm" %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="px-4 pb-4">
+                    {% with idea_trends=idea.market_trends.all %}
+                    {% if idea_trends %}
+                    <div class="space-y-2">
+                        {% for trend in idea_trends %}
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-zinc-400 capitalize">{{ trend.trend_type }}</span>
+                            <div class="flex items-center gap-1.5">
+                                {% if trend.direction == "up" or trend.direction == "accelerating" %}
+                                <i data-lucide="trending-up" class="h-3 w-3 text-emerald-500"></i>
+                                {% elif trend.direction == "down" or trend.direction == "decelerating" %}
+                                <i data-lucide="trending-down" class="h-3 w-3 text-red-400"></i>
+                                {% else %}
+                                <i data-lucide="minus" class="h-3 w-3 text-zinc-400"></i>
+                                {% endif %}
+                                <span class="text-[10px] font-mono text-zinc-400">{{ trend.confidence|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-zinc-400">No trend data yet - run research to generate</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-span-full rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="py-12 text-center">
+                <i data-lucide="trending-up" class="h-10 w-10 mx-auto mb-3 text-zinc-600"></i>
+                <p class="text-sm text-zinc-400">Research product spaces to see market trends</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Summary sections -->
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="briefcase" class="h-4 w-4"></i>
+                    Funding Momentum
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <p class="text-xs text-zinc-400">
+                    Aggregate funding flow across tracked spaces. Populates after research runs detect funding events.
+                </p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="users" class="h-4 w-4"></i>
+                    Hiring Velocity
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <p class="text-xs text-zinc-400">
+                    Job posting trends across tracked companies. Populates when hiring search tool runs.
+                </p>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+            <div class="p-4 pb-3">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="h-4 w-4"></i>
+                    Demand Signals
+                </h3>
+            </div>
+            <div class="px-4 pb-4">
+                <p class="text-xs text-zinc-400">
+                    Community sentiment from Reddit, HN, and forums. Populates when community search tool runs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

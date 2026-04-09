@@ -1,0 +1,42 @@
+{% comment %}
+Agent card component.
+Usage: {% include "components/agent_card.html" with agent=agent_dict %}
+Expects agent dict with: name, role, description, tools (list), icon (orchestrator|incumbents|funding|growth)
+{% endcomment %}
+<div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+    <div class="p-4 pb-3">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="rounded-lg p-1.5 {% if agent.icon == 'orchestrator' %}bg-purple-500/15{% elif agent.icon == 'incumbents' %}bg-blue-500/15{% elif agent.icon == 'funding' %}bg-emerald-500/15{% elif agent.icon == 'growth' %}bg-orange-500/15{% else %}bg-zinc-800{% endif %}">
+                    {% if agent.icon == "orchestrator" %}
+                    <i data-lucide="brain" class="h-4 w-4 text-purple-500"></i>
+                    {% elif agent.icon == "incumbents" %}
+                    <i data-lucide="search" class="h-4 w-4 text-blue-500"></i>
+                    {% elif agent.icon == "funding" %}
+                    <i data-lucide="dollar-sign" class="h-4 w-4 text-emerald-500"></i>
+                    {% elif agent.icon == "growth" %}
+                    <i data-lucide="trending-up" class="h-4 w-4 text-orange-500"></i>
+                    {% else %}
+                    <i data-lucide="bot" class="h-4 w-4 text-zinc-400"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold">{{ agent.name }}</h3>
+                    <p class="text-[10px] text-zinc-400">{{ agent.role }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full {% if agent.status == 'active' %}bg-emerald-500{% elif agent.status == 'running' %}bg-amber-500 animate-pulse{% else %}bg-zinc-600{% endif %}"></span>
+                <span class="text-[10px] text-zinc-400 capitalize">{{ agent.status|default:"idle" }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="px-4 pb-4 space-y-3">
+        <p class="text-xs text-zinc-400 leading-relaxed">{{ agent.description }}</p>
+        <div class="flex flex-wrap gap-1">
+            {% for tool in agent.tools %}
+            <span class="inline-flex items-center rounded-md border border-white/[0.06] bg-zinc-800 px-1.5 py-0.5 text-[10px] font-normal font-mono text-zinc-400">{{ tool }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</div>

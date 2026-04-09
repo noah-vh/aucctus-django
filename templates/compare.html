@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Compare - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">Compare</h1>
+        <p class="mt-1 text-sm text-zinc-400">Side-by-side company comparison across tracked spaces</p>
+    </div>
+</div>
+
+{% if not ideas %}
+<!-- No ideas empty state -->
+<div class="py-16 text-center">
+    <i data-lucide="arrow-left-right" class="h-8 w-8 mx-auto mb-3 text-zinc-600"></i>
+    <p class="text-xs font-medium mb-1">No ideas tracked yet</p>
+    <p class="text-[10px] text-zinc-400 mb-4">Add a product space to start comparing companies.</p>
+    <a href="{% url 'ideas_list' %}" class="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors">
+        <i data-lucide="plus" class="h-3.5 w-3.5 mr-1"></i>
+        Go to Ideas
+    </a>
+</div>
+{% else %}
+<div class="space-y-6">
+    <!-- Idea selector -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold">Select a Space to Compare</h3>
+        </div>
+        <div class="px-4 pb-4">
+            <div class="flex flex-wrap gap-2">
+                {% for idea in ideas %}
+                <a href="{% url 'compare' %}?idea={{ idea.pk }}"
+                   class="rounded-md border px-3 py-1.5 text-xs font-medium transition-colors text-left
+                       {% if selected_idea and idea.pk == selected_idea.pk %}border-blue-500 bg-blue-500/10 text-white{% else %}border-white/[0.06] bg-card text-zinc-400 hover:bg-zinc-800/50 hover:text-white{% endif %}">
+                    {{ idea.description|truncatewords:10 }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if selected_idea %}
+        {% if companies %}
+        <!-- Comparison table -->
+        <div class="overflow-x-auto rounded-lg border border-white/[0.06]">
+            <table class="w-full min-w-[600px]">
+                <thead>
+                    <tr class="border-b border-white/[0.06] bg-zinc-800/50">
+                        <th class="px-4 py-3 text-left text-[10px] font-medium text-zinc-400 w-32">Attribute</th>
+                        {% for company in companies %}
+                        <th class="px-4 py-3 text-left">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-semibold">{{ company.name }}</span>
+                                {% if company.url %}
+                                <a href="{{ company.url }}" target="_blank" rel="noopener noreferrer" class="text-zinc-400 hover:text-white">
+                                    <i data-lucide="building-2" class="h-3 w-3"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.06]">
+                    {% for row in comparison_rows %}
+                    <tr class="transition-colors hover:bg-zinc-800/30">
+                        <td class="px-4 py-3 align-top">
+                            <span class="text-[10px] font-medium text-zinc-400">{{ row.label }}</span>
+                        </td>
+                        {% for company in companies %}
+                        <td class="px-4 py-3 align-top">
+                            {% if row.key == "description" %}
+                                <span class="text-xs">{{ company.description|default:"-" }}</span>
+                            {% elif row.key == "features" %}
+                                <div class="flex flex-wrap gap-1">
+                                    {% for feature in company.features|slice:":4" %}
+                                    <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] font-normal text-zinc-300">{{ feature }}</span>
+                                    {% endfor %}
+                                    {% if company.features|length > 4 %}
+                                    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-1.5 py-0.5 text-[10px]">+{{ company.features|length|add:"-4" }}</span>
+                                    {% endif %}
+                                    {% if not company.features %}
+                                    <span class="text-zinc-600 text-[10px]">-</span>
+                                    {% endif %}
+                                </div>
+                            {% elif row.key == "pricing_model" %}
+                                <span class="text-xs">{{ company.pricing_model|default:"-" }}</span>
+                            {% elif row.key == "target_segment" %}
+                                <span class="text-xs">{{ company.target_segment|default:"-" }}</span>
+                            {% elif row.key == "differentiator" %}
+                                <span class="text-xs">{{ company.differentiator|default:"-" }}</span>
+                            {% elif row.key == "weakness" %}
+                                <span class="text-xs">{{ company.weakness|default:"-" }}</span>
+                            {% elif row.key == "employee_estimate" %}
+                                <span class="text-xs font-mono">{% if company.employee_estimate %}~{{ company.employee_estimate }}{% else %}-{% endif %}</span>
+                            {% elif row.key == "founded_year" %}
+                                <span class="text-xs">{{ company.founded_year|default:"-" }}</span>
+                            {% elif row.key == "headquarters" %}
+                                <span class="text-xs">{{ company.headquarters|default:"-" }}</span>
+                            {% elif row.key == "data_confidence" %}
+                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] capitalize
+                                    {% if company.data_confidence == 'high' %}border-emerald-500/30 text-emerald-500
+                                    {% elif company.data_confidence == 'medium' %}border-amber-500/30 text-amber-500
+                                    {% else %}border-red-500/30 text-red-500{% endif %}">
+                                    {{ company.data_confidence }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-[10px] text-zinc-400 text-right">
+            Showing {{ companies|length }} companies in this space.
+        </p>
+        {% else %}
+        <!-- No companies -->
+        <div class="py-12 text-center rounded-lg border border-dashed border-white/[0.06]">
+            <i data-lucide="building-2" class="h-10 w-10 mx-auto mb-3 text-zinc-700"></i>
+            <p class="text-sm font-medium text-zinc-400">No companies in this space yet</p>
+            <p class="text-xs text-zinc-600 mt-1">Companies appear once research runs for this idea.</p>
+        </div>
+        {% endif %}
+    {% else %}
+    <!-- No idea selected -->
+    <div class="py-12 text-center rounded-lg border border-dashed border-white/[0.06]">
+        <i data-lucide="arrow-left-right" class="h-10 w-10 mx-auto mb-3 text-zinc-700"></i>
+        <p class="text-sm font-medium text-zinc-400">Select a space above to compare its companies</p>
+        <p class="text-xs text-zinc-600 mt-1">Each column will be a company. Each row is an attribute.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

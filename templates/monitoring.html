@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring - Aucctus{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-start justify-between gap-4">
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight">Monitoring</h1>
+        <p class="mt-1 text-sm text-zinc-400">Background intelligence gathering</p>
+    </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <!-- Active Jobs -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="activity" class="h-5 w-5"></i>
+                Active Jobs
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if active_jobs %}
+            <div class="space-y-2">
+                {% for job in active_jobs %}
+                <div class="flex items-center gap-3 rounded-xl bg-zinc-800 border border-white/[0.04] p-3">
+                    <span class="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium capitalize">{{ job.job_type }}</p>
+                        {% if job.started_at %}
+                        <p class="text-xs text-zinc-400">Started {{ job.started_at|time:"g:i A" }}</p>
+                        {% endif %}
+                    </div>
+                    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-2 py-0.5 text-xs capitalize text-zinc-400">{{ job.target_type }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-8 text-center text-zinc-400">
+                <i data-lucide="activity" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-sm">No jobs running</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Jobs -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="clock" class="h-5 w-5"></i>
+                Recent Jobs
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if recent_jobs %}
+            <div class="space-y-2">
+                {% for job in recent_jobs %}
+                <div class="flex items-center gap-2.5 py-1.5 text-sm">
+                    {% if job.status == "completed" %}
+                    <i data-lucide="check-circle-2" class="h-3.5 w-3.5 text-emerald-500"></i>
+                    {% elif job.status == "failed" %}
+                    <i data-lucide="x-circle" class="h-3.5 w-3.5 text-red-500"></i>
+                    {% elif job.status == "running" %}
+                    <i data-lucide="timer" class="h-3.5 w-3.5 text-amber-500 animate-pulse"></i>
+                    {% else %}
+                    <i data-lucide="clock" class="h-3.5 w-3.5 text-zinc-400"></i>
+                    {% endif %}
+                    <span class="flex-1 capitalize truncate">{{ job.job_type }}</span>
+                    {% if job.result_summary %}
+                    <span class="text-xs text-zinc-400 truncate max-w-[200px]">{{ job.result_summary }}</span>
+                    {% endif %}
+                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] capitalize
+                        {% if job.status == 'completed' %}border-emerald-500/30 text-emerald-600
+                        {% elif job.status == 'failed' %}border-red-500/30 text-red-600
+                        {% else %}border-white/[0.06] text-zinc-400{% endif %}">
+                        {{ job.status }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-400">No job history yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Scheduled Intelligence -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden lg:col-span-2">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="timer" class="h-5 w-5"></i>
+                Scheduled Intelligence
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/[0.06] text-left text-zinc-400">
+                            <th class="pb-2 pr-4 font-medium">Job</th>
+                            <th class="pb-2 pr-4 font-medium">Cadence</th>
+                            <th class="pb-2 pr-4 font-medium">Time</th>
+                            <th class="pb-2 font-medium">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.04]">
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Funding Pulse</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Daily</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">6:00 AM</td>
+                            <td class="py-2.5 text-zinc-400">Quick search for new funding in tracked spaces</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">News Monitor</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Daily</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">6:30 AM</td>
+                            <td class="py-2.5 text-zinc-400">Check for news about tracked companies</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Full Rescan (Active)</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Weekly</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">Mon 9:00 AM</td>
+                            <td class="py-2.5 text-zinc-400">Complete re-research of active ideas</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Hiring Velocity</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Weekly</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">Wed 9:00 AM</td>
+                            <td class="py-2.5 text-zinc-400">Check job posting trends in tracked spaces</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Signal Digest</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Weekly</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">Mon 9:30 AM</td>
+                            <td class="py-2.5 text-zinc-400">Summarize week's signals for Slack</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Full Rescan (Watching)</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Monthly</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">1st Mon 9:00 AM</td>
+                            <td class="py-2.5 text-zinc-400">Re-research of watching ideas</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 pr-4 font-medium">Stale Check</td>
+                            <td class="py-2.5 pr-4">
+                                <span class="inline-flex items-center rounded-md bg-zinc-800 px-1.5 py-0.5 text-xs">Monthly</span>
+                            </td>
+                            <td class="py-2.5 pr-4 font-mono text-xs text-zinc-400">1st Mon 10:00 AM</td>
+                            <td class="py-2.5 text-zinc-400">Flag companies not seen in 90+ days</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

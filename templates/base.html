@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aucctus{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'rgba(255,255,255,0.06)',
+                        ring: 'rgba(255,255,255,0.1)',
+                        background: '#09090b',
+                        foreground: '#fafafa',
+                        card: { DEFAULT: '#18181b', foreground: '#fafafa' },
+                        muted: { DEFAULT: '#27272a', foreground: '#a1a1aa' },
+                        accent: { DEFAULT: '#27272a', foreground: '#fafafa' },
+                        primary: { DEFAULT: '#3b82f6', foreground: '#fafafa' },
+                        destructive: { DEFAULT: '#ef4444', foreground: '#fafafa' },
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: #09090b;
+            color: #fafafa;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        /* Animation for pulse dots */
+        @keyframes bounce-dot {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-4px); }
+        }
+        .animate-bounce-dot { animation: bounce-dot 1.4s infinite ease-in-out; }
+        .animate-bounce-dot-2 { animation: bounce-dot 1.4s infinite ease-in-out 0.16s; }
+        .animate-bounce-dot-3 { animation: bounce-dot 1.4s infinite ease-in-out 0.32s; }
+        /* Prose for chat markdown */
+        .prose-chat p { margin-bottom: 0.5em; }
+        .prose-chat p:last-child { margin-bottom: 0; }
+        .prose-chat ul { list-style-type: disc; padding-left: 1.25em; margin: 0.5em 0; }
+        .prose-chat ol { list-style-type: decimal; padding-left: 1.25em; margin: 0.5em 0; }
+        .prose-chat code { background: rgba(255,255,255,0.06); padding: 0.15em 0.3em; border-radius: 0.25em; font-size: 0.85em; }
+        .prose-chat pre { background: rgba(255,255,255,0.04); padding: 0.75em 1em; border-radius: 0.5em; overflow-x: auto; margin: 0.5em 0; }
+        .prose-chat pre code { background: transparent; padding: 0; }
+        .prose-chat a { color: #60a5fa; text-decoration: underline; }
+        .prose-chat h1, .prose-chat h2, .prose-chat h3 { font-weight: 600; margin: 0.75em 0 0.25em; }
+        .prose-chat strong { font-weight: 600; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full overflow-hidden">
+    <div class="flex h-screen overflow-hidden">
+        {% include "components/sidebar.html" %}
+        <main class="flex-1 flex flex-col min-w-0 pl-52 pr-3 py-3 h-screen overflow-hidden">
+            {% block layout %}
+                <div class="flex-1 overflow-y-auto rounded-2xl bg-card border border-white/[0.04]">
+                    <div class="mx-auto max-w-6xl px-8 py-8">
+                        {% if page_title or page_actions %}
+                        <div class="mb-8 flex items-start justify-between gap-4">
+                            <div>
+                                {% if page_title %}
+                                <h1 class="text-2xl font-bold tracking-tight">{{ page_title }}</h1>
+                                {% endif %}
+                                {% if page_description %}
+                                <p class="mt-1 text-sm text-muted-foreground">{{ page_description }}</p>
+                                {% endif %}
+                            </div>
+                            {% block page_actions %}{% endblock %}
+                        </div>
+                        {% endif %}
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            {% endblock %}
+        </main>
+    </div>
+    <script>
+        // Initialize Lucide icons after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+        // Re-initialize after HTMX swaps
+        document.addEventListener('htmx:afterSwap', function() {
+            lucide.createIcons();
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
