@@ -30,16 +30,19 @@ from rest_framework.views import APIView
 
 from .models import (
     Company,
+    CompanyMetric,
     FundingEvent,
     Idea,
     IntelSignal,
     Investor,
     InvestorCompanyLink,
     MarketSignal,
+    ResearchRun,
     Verdict,
 )
 from .serializers import (
     AgentSkillSerializer,
+    CompanyMetricSerializer,
     CompanySerializer,
     FundingEventSerializer,
     IdeaCreateSerializer,
@@ -181,7 +184,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
             logger.error(
                 "upsert_company failed",
                 exc_info=True,
-                extra={"idea_id": idea_id, "name": request.data.get("name")},
+                extra={"idea_id": idea_id, "company_name": request.data.get("name")},
             )
             return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -365,7 +368,7 @@ class InvestorViewSet(viewsets.ModelViewSet):
                     investor.last_seen = now
                     investor.save()
         except Exception as exc:
-            logger.error("investor upsert failed", exc_info=True, extra={"name": name})
+            logger.error("investor upsert failed", exc_info=True, extra={"investor_name": name})
             return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(InvestorSerializer(investor).data, status=status.HTTP_200_OK)
@@ -539,3 +542,57 @@ class ResearchStreamView(View):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"  # disable nginx buffering
         return response
+
+
+# ---------------------------------------------------------------------------
+# Stats / overview
+# ---------------------------------------------------------------------------
+
+
+class StatsView(APIView):
+    """
+    GET /api/v1/ideas/stats/
+    Mirrors the original convex stats.getOverview query: a single aggregate
+    object counting every top-level entity.
+    """
+
+    def get(self, request: Request):
+        return Response(
+            {
+                "ideas": Idea.objects.count(),
+                "companies": Company.objects.count(),
+                "fundingEvents": FundingEvent.objects.count(),
+                "researchRuns": ResearchRun.objects.count(),
+                "verdicts": Verdict.objects.count(),
+                "signals": IntelSignal.objects.count(),
+                "marketSignals": MarketSignal.objects.count(),
+                "investors": Investor.objects.count(),
+            }
+        )
+
+
+# ---------------------------------------------------------------------------
+# Company metrics
+# ---------------------------------------------------------------------------
+
+
+class CompanyMetricViewSet(viewsets.ModelViewSet):
+    """
+    list:   filter by company_id query param, ordered by -date
+    create: insert a metric data point (captured_at auto-set)
+
+    Mirrors convex company_metrics.insert + getByCompany.
+    """
+
+    serializer_class = CompanyMetricSerializer
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_queryset(self):
+        qs = CompanyMetric.objects.all()
+        company_id = self.request.query_params.get("company_id")
+        metric_type = self.request.query_params.get("metric_type")
+        if company_id:
+            qs = qs.filter(company_id=company_id)
+        if metric_type:
+            qs = qs.filter(metric_type=metric_type)
+        return qs.order_by("-date")

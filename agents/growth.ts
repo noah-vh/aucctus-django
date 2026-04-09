@@ -7,8 +7,8 @@
  * Writes all findings to the brain (Convex) via brain tools.
  */
 import { Agent } from "@mariozechner/pi-agent-core";
-import { RESEARCH_MODEL } from "../shared/config";
-import { GROWTH_SYSTEM_PROMPT } from "../shared/prompts";
+import { RESEARCH_MODEL } from "./shared/config";
+import { GROWTH_SYSTEM_PROMPT } from "./shared/prompts";
 import { EmitFn } from "./incumbents";
 import { exaSearchTool } from "./tools/exa-search";
 import { tavilySearchTool } from "./tools/tavily-search";

@@ -42,6 +42,11 @@
             <i data-lucide="arrow-left-right" class="h-4 w-4"></i>
             Compare
         </a>
+        <a href="{% url 'system' %}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all {% if request.resolver_match.url_name == 'system' %}bg-white/[0.08] text-white{% else %}text-zinc-400 hover:bg-white/[0.04] hover:text-white{% endif %}">
+            <i data-lucide="layers" class="h-4 w-4"></i>
+            System
+        </a>
     </nav>
 
     <!-- Footer -->

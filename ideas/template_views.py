@@ -4,11 +4,11 @@ import logging
 from django.shortcuts import render, get_object_or_404
 
 from .models import (
-    Idea, Company, FundingEvent, MarketSignal, Verdict, IntelSignal,
-    Investor, MarketTrend, ResearchRun,
+    Idea, Company, CompanyMetric, FundingEvent, MarketSignal, Verdict, IntelSignal,
+    Investor, InvestorCompanyLink, MarketTrend, ResearchRun,
 )
 from chat.models import ChatSession
-from monitoring.models import Job
+from monitoring.models import ActivityLog, Job
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +30,22 @@ def dashboard(request):
 
 
 def chat(request):
-    """Chat page with session sidebar."""
+    """Chat page with session sidebar.
+
+    Query params:
+      session=<id> - show a specific session
+      action=new   - show the empty state so the user can start a new research
+    """
     sessions = ChatSession.objects.filter(status="active").order_by("-updated_at")[:50]
     active_session_id = request.GET.get("session")
+    action = request.GET.get("action")
     active_session = None
     messages = []
 
-    if active_session_id:
+    if action == "new":
+        # Intentionally leave active_session=None and messages=[] to show empty state.
+        pass
+    elif active_session_id:
         try:
             active_session = ChatSession.objects.get(pk=active_session_id)
             messages = active_session.messages.all()
@@ -93,23 +102,59 @@ def idea_detail(request, pk):
 
 
 def company_detail(request, pk):
-    """Company detail page."""
+    """Company detail page with funding history, metrics, activity feed."""
     company = get_object_or_404(Company, pk=pk)
     funding = FundingEvent.objects.filter(
         company_name=company.name, idea=company.idea
     ).order_by("-date")
+    metrics = CompanyMetric.objects.filter(company=company).order_by("-date")[:50]
+    activity = ActivityLog.objects.filter(
+        entity_type="company", entity_id=str(pk)
+    ).order_by("-created_at")[:50]
+    # Other ideas this company name appears under (rare but matches original).
+    linked_ideas = Idea.objects.filter(companies__name=company.name).distinct()
+
     return render(request, "companies/detail.html", {
         "company": company,
         "funding": funding,
+        "metrics": metrics,
+        "activity": activity,
+        "ideas": linked_ideas,
     })
 
 
 def investor_detail(request, pk):
-    """Investor detail page."""
+    """Investor detail page with portfolio, activity feed."""
     investor = get_object_or_404(Investor, pk=pk)
+    portfolio = (
+        InvestorCompanyLink.objects.filter(investor=investor)
+        .select_related("company", "idea")
+        .order_by("-id")
+    )
+    activity = ActivityLog.objects.filter(
+        entity_type="investor", entity_id=str(pk)
+    ).order_by("-created_at")[:50]
+
     return render(request, "investors/detail.html", {
         "investor": investor,
+        "portfolio": portfolio,
+        "activity": activity,
     })
+
+
+def system(request):
+    """System overview page — architecture, features, data model, live stats."""
+    stats = {
+        "ideas": Idea.objects.count(),
+        "companies": Company.objects.count(),
+        "fundingEvents": FundingEvent.objects.count(),
+        "researchRuns": ResearchRun.objects.count(),
+        "verdicts": Verdict.objects.count(),
+        "signals": IntelSignal.objects.count(),
+        "marketSignals": MarketSignal.objects.count(),
+        "investors": Investor.objects.count(),
+    }
+    return render(request, "system.html", {"stats": stats})
 
 
 def compare(request):
@@ -135,14 +180,37 @@ def compare(request):
     if selected_idea_id:
         try:
             selected_idea = Idea.objects.get(pk=selected_idea_id)
-            companies = selected_idea.companies.all()[:8]
+            companies = list(selected_idea.companies.all()[:12])
         except Idea.DoesNotExist:
             logger.warning("compare_view: idea_id=%s not found", selected_idea_id)
+
+    # Serialize companies as a compact JSON blob so the Alpine client-side
+    # diff logic can compute highlights and drive the column selector.
+    import json as _json
+    companies_json = _json.dumps([
+        {
+            "id": c.pk,
+            "name": c.name,
+            "url": c.url or "",
+            "description": c.description or "",
+            "features": c.features or [],
+            "pricing_model": c.pricing_model or "",
+            "target_segment": c.target_segment or "",
+            "differentiator": c.differentiator or "",
+            "weakness": c.weakness or "",
+            "employee_estimate": c.employee_estimate,
+            "founded_year": c.founded_year,
+            "headquarters": c.headquarters or "",
+            "data_confidence": c.data_confidence or "",
+        }
+        for c in companies
+    ])
 
     return render(request, "compare.html", {
         "ideas": ideas,
         "selected_idea": selected_idea,
         "companies": companies,
+        "companies_json": companies_json,
         "comparison_rows": comparison_rows,
     })
 

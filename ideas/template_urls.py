@@ -13,4 +13,5 @@ urlpatterns = [
     path("trends/", template_views.trends, name="trends"),
     path("monitoring/", template_views.monitoring_page, name="monitoring"),
     path("agents/", template_views.agents, name="agents"),
+    path("system/", template_views.system, name="system"),
 ]

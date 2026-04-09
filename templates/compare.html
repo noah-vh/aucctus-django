@@ -11,7 +11,6 @@
 </div>
 
 {% if not ideas %}
-<!-- No ideas empty state -->
 <div class="py-16 text-center">
     <i data-lucide="arrow-left-right" class="h-8 w-8 mx-auto mb-3 text-zinc-600"></i>
     <p class="text-xs font-medium mb-1">No ideas tracked yet</p>
@@ -43,82 +42,165 @@
 
     {% if selected_idea %}
         {% if companies %}
-        <!-- Comparison table -->
-        <div class="overflow-x-auto rounded-lg border border-white/[0.06]">
-            <table class="w-full min-w-[600px]">
-                <thead>
-                    <tr class="border-b border-white/[0.06] bg-zinc-800/50">
-                        <th class="px-4 py-3 text-left text-[10px] font-medium text-zinc-400 w-32">Attribute</th>
-                        {% for company in companies %}
-                        <th class="px-4 py-3 text-left">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-semibold">{{ company.name }}</span>
-                                {% if company.url %}
-                                <a href="{{ company.url }}" target="_blank" rel="noopener noreferrer" class="text-zinc-400 hover:text-white">
-                                    <i data-lucide="building-2" class="h-3 w-3"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/[0.06]">
-                    {% for row in comparison_rows %}
-                    <tr class="transition-colors hover:bg-zinc-800/30">
-                        <td class="px-4 py-3 align-top">
-                            <span class="text-[10px] font-medium text-zinc-400">{{ row.label }}</span>
-                        </td>
-                        {% for company in companies %}
-                        <td class="px-4 py-3 align-top">
-                            {% if row.key == "description" %}
-                                <span class="text-xs">{{ company.description|default:"-" }}</span>
-                            {% elif row.key == "features" %}
-                                <div class="flex flex-wrap gap-1">
-                                    {% for feature in company.features|slice:":4" %}
-                                    <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] font-normal text-zinc-300">{{ feature }}</span>
-                                    {% endfor %}
-                                    {% if company.features|length > 4 %}
-                                    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-1.5 py-0.5 text-[10px]">+{{ company.features|length|add:"-4" }}</span>
-                                    {% endif %}
-                                    {% if not company.features %}
-                                    <span class="text-zinc-600 text-[10px]">-</span>
-                                    {% endif %}
-                                </div>
-                            {% elif row.key == "pricing_model" %}
-                                <span class="text-xs">{{ company.pricing_model|default:"-" }}</span>
-                            {% elif row.key == "target_segment" %}
-                                <span class="text-xs">{{ company.target_segment|default:"-" }}</span>
-                            {% elif row.key == "differentiator" %}
-                                <span class="text-xs">{{ company.differentiator|default:"-" }}</span>
-                            {% elif row.key == "weakness" %}
-                                <span class="text-xs">{{ company.weakness|default:"-" }}</span>
-                            {% elif row.key == "employee_estimate" %}
-                                <span class="text-xs font-mono">{% if company.employee_estimate %}~{{ company.employee_estimate }}{% else %}-{% endif %}</span>
-                            {% elif row.key == "founded_year" %}
-                                <span class="text-xs">{{ company.founded_year|default:"-" }}</span>
-                            {% elif row.key == "headquarters" %}
-                                <span class="text-xs">{{ company.headquarters|default:"-" }}</span>
-                            {% elif row.key == "data_confidence" %}
-                                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] capitalize
-                                    {% if company.data_confidence == 'high' %}border-emerald-500/30 text-emerald-500
-                                    {% elif company.data_confidence == 'medium' %}border-amber-500/30 text-amber-500
-                                    {% else %}border-red-500/30 text-red-500{% endif %}">
-                                    {{ company.data_confidence }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div x-data="compareView()" x-init="init()">
+            <!-- Company selector chips (shown when more than 4 companies) -->
+            <template x-if="allCompanies.length > 4">
+                <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden mb-4">
+                    <div class="p-4 pb-2">
+                        <h3 class="text-xs text-zinc-400 font-normal">
+                            Showing <span x-text="activeCompanies.length"></span> of <span x-text="allCompanies.length"></span> companies. Click to select/deselect.
+                        </h3>
+                    </div>
+                    <div class="px-4 pb-4">
+                        <div class="flex flex-wrap gap-1.5">
+                            <template x-for="c in allCompanies" :key="c.id">
+                                <button @click="toggle(c.id)"
+                                        :class="selected.has(c.id)
+                                            ? 'border-blue-500 bg-blue-500/10 text-white'
+                                            : 'border-white/[0.06] bg-card text-zinc-400 hover:bg-zinc-800/50'"
+                                        class="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-medium transition-colors">
+                                    <span x-text="c.name"></span>
+                                    <template x-if="selected.has(c.id)">
+                                        <i data-lucide="x" class="h-2.5 w-2.5"></i>
+                                    </template>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Comparison table -->
+            <div class="overflow-x-auto rounded-lg border border-white/[0.06]">
+                <table class="w-full min-w-[600px]">
+                    <thead>
+                        <tr class="border-b border-white/[0.06] bg-zinc-800/50">
+                            <th class="px-4 py-3 text-left text-[10px] font-medium text-zinc-400 w-32">Attribute</th>
+                            <template x-for="c in activeCompanies" :key="c.id">
+                                <th class="px-4 py-3 text-left">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-semibold" x-text="c.name"></span>
+                                        <template x-if="c.url">
+                                            <a :href="c.url" target="_blank" rel="noopener noreferrer"
+                                               class="text-zinc-400 hover:text-white">
+                                                <i data-lucide="building-2" class="h-3 w-3"></i>
+                                            </a>
+                                        </template>
+                                    </div>
+                                </th>
+                            </template>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/[0.06]">
+                        <template x-for="row in rows" :key="row.key">
+                            <tr :class="rowDiffers(row.key) && activeCompanies.length > 1 ? 'bg-amber-500/5' : ''"
+                                class="transition-colors hover:bg-zinc-800/30">
+                                <td class="px-4 py-3 align-top">
+                                    <span class="text-[10px] font-medium text-zinc-400" x-text="row.label"></span>
+                                    <template x-if="rowDiffers(row.key) && activeCompanies.length > 1">
+                                        <span class="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle"></span>
+                                    </template>
+                                </td>
+                                <template x-for="c in activeCompanies" :key="c.id">
+                                    <td class="px-4 py-3 align-top">
+                                        <template x-if="!hasValue(c[row.key])">
+                                            <span class="text-zinc-600 text-[10px]">-</span>
+                                        </template>
+                                        <template x-if="hasValue(c[row.key]) && row.key === 'features'">
+                                            <div class="flex flex-wrap gap-1">
+                                                <template x-for="(f, i) in c[row.key].slice(0, 4)" :key="i">
+                                                    <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300" x-text="f"></span>
+                                                </template>
+                                                <template x-if="c[row.key].length > 4">
+                                                    <span class="inline-flex items-center rounded-full border border-white/[0.06] px-1.5 py-0.5 text-[10px]" x-text="'+' + (c[row.key].length - 4)"></span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template x-if="hasValue(c[row.key]) && row.key === 'data_confidence'">
+                                            <span :class="{
+                                                'border-emerald-500/30 text-emerald-500': c[row.key] === 'high',
+                                                'border-amber-500/30 text-amber-500': c[row.key] === 'medium',
+                                                'border-red-500/30 text-red-500': c[row.key] === 'low',
+                                            }" class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] capitalize" x-text="c[row.key]"></span>
+                                        </template>
+                                        <template x-if="hasValue(c[row.key]) && row.key === 'employee_estimate'">
+                                            <span class="text-xs font-mono" x-text="'~' + c[row.key].toLocaleString()"></span>
+                                        </template>
+                                        <template x-if="hasValue(c[row.key]) && row.key !== 'features' && row.key !== 'data_confidence' && row.key !== 'employee_estimate'">
+                                            <span class="text-xs" x-text="c[row.key]"></span>
+                                        </template>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-[10px] text-zinc-400 text-right mt-2">
+                Amber rows indicate attributes that differ between companies.
+            </p>
         </div>
-        <p class="text-[10px] text-zinc-400 text-right">
-            Showing {{ companies|length }} companies in this space.
-        </p>
+
+        {{ companies_json|json_script:"compare-companies" }}
+
+        <script>
+        function compareView() {
+            const rows = [
+                { key: "description", label: "Description" },
+                { key: "features", label: "Features" },
+                { key: "pricing_model", label: "Pricing" },
+                { key: "target_segment", label: "Target Segment" },
+                { key: "differentiator", label: "Differentiator" },
+                { key: "weakness", label: "Weakness" },
+                { key: "employee_estimate", label: "Employees" },
+                { key: "founded_year", label: "Founded" },
+                { key: "headquarters", label: "HQ" },
+                { key: "data_confidence", label: "Data Confidence" },
+            ];
+
+            return {
+                rows,
+                allCompanies: [],
+                selected: new Set(),
+
+                init() {
+                    const raw = document.getElementById("compare-companies");
+                    this.allCompanies = raw ? JSON.parse(raw.textContent || "[]") : [];
+                    if (window.lucide) lucide.createIcons();
+                },
+
+                get activeCompanies() {
+                    if (this.selected.size === 0) return this.allCompanies.slice(0, 4);
+                    return this.allCompanies.filter((c) => this.selected.has(c.id));
+                },
+
+                toggle(id) {
+                    const next = new Set(this.selected);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    this.selected = next;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                hasValue(v) {
+                    if (v === null || v === undefined || v === "") return false;
+                    if (Array.isArray(v) && v.length === 0) return false;
+                    return true;
+                },
+
+                rowDiffers(key) {
+                    const values = this.activeCompanies.map((c) => {
+                        const v = c[key];
+                        if (Array.isArray(v)) return v.slice().sort().join(",");
+                        return String(v ?? "");
+                    });
+                    return new Set(values).size > 1;
+                },
+            };
+        }
+        </script>
         {% else %}
-        <!-- No companies -->
         <div class="py-12 text-center rounded-lg border border-dashed border-white/[0.06]">
             <i data-lucide="building-2" class="h-10 w-10 mx-auto mb-3 text-zinc-700"></i>
             <p class="text-sm font-medium text-zinc-400">No companies in this space yet</p>
@@ -126,11 +208,10 @@
         </div>
         {% endif %}
     {% else %}
-    <!-- No idea selected -->
     <div class="py-12 text-center rounded-lg border border-dashed border-white/[0.06]">
         <i data-lucide="arrow-left-right" class="h-10 w-10 mx-auto mb-3 text-zinc-700"></i>
         <p class="text-sm font-medium text-zinc-400">Select a space above to compare its companies</p>
-        <p class="text-xs text-zinc-600 mt-1">Each column will be a company. Each row is an attribute.</p>
+        <p class="text-xs text-zinc-600 mt-1">Each column will be a company. Each row is an attribute. Differences are highlighted.</p>
     </div>
     {% endif %}
 </div>

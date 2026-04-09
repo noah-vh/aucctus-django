@@ -3,41 +3,209 @@
 {% block title %}{{ investor.name }} - Aucctus{% endblock %}
 
 {% block content %}
-<div class="flex-1 overflow-y-auto rounded-2xl bg-[#18181b] border border-white/[0.04]">
-    <div class="mx-auto max-w-4xl px-8 py-8">
-        <div class="mb-8">
-            <div class="flex items-center gap-3 mb-2">
-                <h1 class="text-2xl font-bold">{{ investor.name }}</h1>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-400">
-                    {{ investor.type|upper }}
-                </span>
+<div class="mb-6 flex items-start justify-between gap-4">
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-white/[0.06] bg-zinc-800">
+                <i data-lucide="briefcase" class="h-6 w-6 text-zinc-400"></i>
             </div>
-            {% if investor.thesis %}
-            <p class="text-sm text-zinc-400 mt-2">{{ investor.thesis }}</p>
-            {% endif %}
+            <h1 class="text-2xl font-bold tracking-tight truncate">{{ investor.name }}</h1>
+            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize
+                {% if investor.type == 'vc' %}border-violet-500/30 text-violet-400
+                {% elif investor.type == 'angel' %}border-amber-500/30 text-amber-400
+                {% elif investor.type == 'corporate' %}border-blue-500/30 text-blue-400
+                {% elif investor.type == 'family_office' %}border-emerald-500/30 text-emerald-400
+                {% elif investor.type == 'accelerator' %}border-sky-500/30 text-sky-400
+                {% else %}border-zinc-500/30 text-zinc-400{% endif %}">
+                {{ investor.type|cut:"_" }}
+            </span>
+            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize
+                {% if investor.data_confidence == 'high' %}border-emerald-500/30 text-emerald-400
+                {% elif investor.data_confidence == 'medium' %}border-amber-500/30 text-amber-400
+                {% else %}border-red-500/30 text-red-400{% endif %}">
+                {{ investor.data_confidence }} confidence
+            </span>
         </div>
-
-        {% if investor.focus_areas %}
-        <div class="mb-6">
-            <h2 class="text-sm font-semibold mb-3">Focus Areas</h2>
-            <div class="flex flex-wrap gap-1.5">
-                {% for area in investor.focus_areas %}
-                <span class="px-2 py-0.5 rounded-md bg-zinc-800 text-xs text-zinc-400">{{ area }}</span>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        {% if investor.notable_portfolio %}
-        <div class="mb-6">
-            <h2 class="text-sm font-semibold mb-3">Notable Portfolio</h2>
-            <div class="space-y-1.5">
-                {% for company in investor.notable_portfolio %}
-                <p class="text-sm text-zinc-400">{{ company }}</p>
-                {% endfor %}
-            </div>
-        </div>
+        {% if investor.thesis %}
+        <p class="text-sm text-zinc-400 mt-3 leading-relaxed">{{ investor.thesis }}</p>
         {% endif %}
     </div>
+    <button onclick="history.back()"
+            class="inline-flex items-center rounded-lg border border-white/[0.06] bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-400 hover:bg-zinc-800 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="h-3.5 w-3.5 mr-1"></i>
+        Back
+    </button>
 </div>
+
+<div class="border-t border-white/[0.06] my-6"></div>
+
+<!-- Stats row -->
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
+    <div class="rounded-md border border-white/[0.06] bg-card p-3">
+        <div class="flex items-center gap-1.5 text-zinc-400 mb-1">
+            <i data-lucide="dollar-sign" class="h-3 w-3"></i>
+            <span class="text-[10px]">Check Size</span>
+        </div>
+        <p class="text-sm font-medium font-mono">
+            {% if investor.check_size_min or investor.check_size_max %}
+                ${{ investor.check_size_min|floatformat:0|default:"-" }} - ${{ investor.check_size_max|floatformat:0|default:"-" }}
+            {% else %}-{% endif %}
+        </p>
+    </div>
+    <div class="rounded-md border border-white/[0.06] bg-card p-3">
+        <div class="flex items-center gap-1.5 text-zinc-400 mb-1">
+            <i data-lucide="building-2" class="h-3 w-3"></i>
+            <span class="text-[10px]">Portfolio</span>
+        </div>
+        <p class="text-sm font-medium">{{ investor.portfolio_count|default:"-" }}</p>
+    </div>
+    <div class="rounded-md border border-white/[0.06] bg-card p-3">
+        <div class="flex items-center gap-1.5 text-zinc-400 mb-1">
+            <i data-lucide="target" class="h-3 w-3"></i>
+            <span class="text-[10px]">Focus Areas</span>
+        </div>
+        <p class="text-sm font-medium">{{ investor.focus_areas|length }}</p>
+    </div>
+    <div class="rounded-md border border-white/[0.06] bg-card p-3">
+        <div class="flex items-center gap-1.5 text-zinc-400 mb-1">
+            <i data-lucide="database" class="h-3 w-3"></i>
+            <span class="text-[10px]">First Seen</span>
+        </div>
+        <p class="text-sm font-medium">{{ investor.first_seen|date:"M j, Y" }}</p>
+    </div>
+</div>
+
+<!-- Focus areas -->
+{% if investor.focus_areas %}
+<div class="mb-6">
+    <p class="text-[10px] text-zinc-400 mb-2">Focus Areas</p>
+    <div class="flex flex-wrap gap-1.5">
+        {% for area in investor.focus_areas %}
+        <span class="inline-flex items-center rounded-md bg-zinc-700 px-2 py-0.5 text-[10px] text-zinc-300">{{ area }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="grid gap-4 lg:grid-cols-2">
+    <!-- Portfolio companies -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-2">
+            <h3 class="flex items-center justify-between text-sm font-semibold">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="building-2" class="h-3.5 w-3.5"></i>
+                    Portfolio Companies
+                </span>
+                <span class="text-[10px] font-normal text-zinc-400">{{ portfolio|length }}</span>
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if portfolio %}
+            <div class="space-y-2">
+                {% for link in portfolio %}
+                <div class="flex items-center justify-between rounded-md border border-white/[0.06] p-2.5">
+                    <div class="min-w-0">
+                        <a href="{% url 'company_detail' link.company.pk %}"
+                           class="text-xs font-medium hover:underline cursor-pointer truncate">
+                            {{ link.company.name }}
+                        </a>
+                        {% if link.round %}
+                        <p class="text-[10px] text-zinc-400 capitalize">{{ link.round }}</p>
+                        {% endif %}
+                    </div>
+                    {% if link.amount_contributed %}
+                    <p class="text-xs font-medium font-mono shrink-0">${{ link.amount_contributed|floatformat:0 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-8 text-center text-zinc-400">
+                <i data-lucide="building-2" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-sm font-medium">No portfolio data yet</p>
+                <p class="text-xs mt-1">Companies will appear as investor-company links are tracked.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notable portfolio -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-2">
+            <h3 class="flex items-center gap-2 text-sm font-semibold">
+                <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
+                Notable Portfolio
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if investor.notable_portfolio %}
+            <div class="flex flex-wrap gap-1.5">
+                {% for name in investor.notable_portfolio %}
+                <span class="inline-flex items-center rounded-md bg-zinc-700 px-2 py-0.5 text-xs text-zinc-300">{{ name }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-8 text-center text-zinc-400">
+                <i data-lucide="trending-up" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-sm font-medium">No notable companies listed</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden lg:col-span-2">
+        <div class="p-4 pb-2">
+            <h3 class="flex items-center justify-between text-sm font-semibold">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="activity" class="h-3.5 w-3.5"></i>
+                    Activity
+                </span>
+                <span class="text-[10px] font-normal text-zinc-400">{{ activity|length }}</span>
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if activity %}
+            <div class="space-y-2">
+                {% for entry in activity %}
+                <div class="flex items-start gap-3 rounded-md border border-white/[0.06] p-2.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs">{{ entry.description }}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] capitalize text-zinc-300">
+                                {{ entry.activity_type|cut:"_" }}
+                            </span>
+                            <span class="text-[10px] text-zinc-400">{{ entry.created_at|date:"M j, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-8 text-center text-zinc-400">
+                <i data-lucide="activity" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-sm font-medium">No activity yet</p>
+                <p class="text-xs mt-1">Activity will stream in as this investor appears in monitored spaces.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Source URLs -->
+{% if investor.source_urls %}
+<div class="mt-6">
+    <p class="text-[10px] text-zinc-400 mb-2">Sources</p>
+    <div class="flex flex-wrap gap-2">
+        {% for url in investor.source_urls %}
+        <a href="{{ url }}" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors">
+            <i data-lucide="external-link" class="h-2.5 w-2.5"></i>
+            {{ url|urlencode|truncatechars:40 }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

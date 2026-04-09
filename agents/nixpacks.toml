@@ -1,0 +1,11 @@
+# Nixpacks config for the Node agent service (deploys independently of Django).
+# Target: Railway service with `rootDirectory = agents`.
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[start]
+cmd = "npx tsx server.ts"

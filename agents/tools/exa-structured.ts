@@ -1,7 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import Exa from "exa-js";
-import { EXA_API_KEY } from "../../shared/config";
+import { EXA_API_KEY } from "../shared/config";
 
 // ---- searchCompaniesDeep ------------------------------------------------
 

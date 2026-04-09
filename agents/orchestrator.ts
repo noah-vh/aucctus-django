@@ -8,8 +8,8 @@
 import { Agent } from "@mariozechner/pi-agent-core";
 import { Type } from "@sinclair/typebox";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-import { RESEARCH_MODEL } from "../shared/config";
-import { ORCHESTRATOR_SYSTEM_PROMPT } from "../shared/prompts";
+import { RESEARCH_MODEL } from "./shared/config";
+import { ORCHESTRATOR_SYSTEM_PROMPT } from "./shared/prompts";
 import { queryBrain } from "./tools/brain";
 import { assessEvidenceQualityTool, crossIdeaCompareTool } from "./tools/analysis";
 import { setMonitoringSchedule, getMonitoringSchedule } from "./tools/scheduling";

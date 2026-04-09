@@ -23,11 +23,10 @@
                 <p class="text-xs text-zinc-400 mt-0.5">Describe a product space to research</p>
             </div>
             <div class="px-4 pb-4">
-                <form hx-post="{% url 'ideas_list' %}" hx-target="body" x-data="{ text: '' }">
+                <form @submit.prevent="submit()" x-data="quickResearch()">
                     {% csrf_token %}
                     <div class="space-y-3">
                         <textarea
-                            name="description"
                             x-model="text"
                             placeholder="e.g., autonomous delivery robots, AI code generation tools, electric vehicle charging infrastructure..."
                             rows="3"
@@ -35,10 +34,11 @@
                         ></textarea>
                         <button
                             type="submit"
-                            :disabled="!text.trim()"
+                            :disabled="!text.trim() || submitting"
                             class="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Research This Space
+                            <span x-show="!submitting">Research This Space</span>
+                            <span x-show="submitting">Opening chat...</span>
                         </button>
                     </div>
                 </form>
@@ -169,4 +169,22 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function quickResearch() {
+    return {
+        text: '',
+        submitting: false,
+        submit() {
+            if (!this.text.trim() || this.submitting) return;
+            this.submitting = true;
+            // Stash the prompt so the chat page picks it up and auto-sends.
+            try { sessionStorage.setItem('aucctus:quickPrompt', this.text.trim()); } catch {}
+            window.location.href = '{% url "chat" %}?action=new';
+        },
+    };
+}
+</script>
 {% endblock %}

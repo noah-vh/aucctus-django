@@ -84,7 +84,7 @@ class MarketSignal(models.Model):
     source_url = models.URLField(max_length=2048)
     source_credibility = models.CharField(max_length=10, default="medium")
     date = models.CharField(max_length=20, null=True, blank=True)
-    captured_at = models.DateTimeField()
+    captured_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-captured_at"]
@@ -198,7 +198,7 @@ class CompanyMetric(models.Model):
     unit = models.CharField(max_length=50, null=True, blank=True)
     date = models.CharField(max_length=20)
     source_url = models.URLField(max_length=2048, null=True, blank=True)
-    captured_at = models.DateTimeField()
+    captured_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-captured_at"]

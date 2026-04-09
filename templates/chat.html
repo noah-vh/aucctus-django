@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load chat_extras %}
 
 {% block title %}Chat - Aucctus{% endblock %}
 
@@ -68,19 +69,55 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="max-w-[85%] space-y-1">
+                            <div class="max-w-[85%] space-y-1 flex-1" x-data="persistedMessage('{{ msg.pk }}')">
                                 {% if msg.agent %}
                                 <span class="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">{{ msg.agent }}</span>
                                 {% endif %}
-                                <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3">
-                                    <div class="text-xs leading-relaxed prose-chat">{{ msg.content|linebreaksbr }}</div>
-                                    {% if msg.idea_id %}
-                                    <a href="{% url 'idea_detail' msg.idea_id %}"
-                                       class="flex items-center gap-1.5 mt-2 pt-2 border-t border-zinc-700/50 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors">
-                                        View full research
-                                        <i data-lucide="arrow-right" class="h-3 w-3"></i>
-                                    </a>
+                                <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3 space-y-1.5">
+                                    {% if msg.agent_events %}
+                                    <script type="application/json" id="agent-events-{{ msg.pk }}">{{ msg.agent_events|agent_events_json }}</script>
+                                    <div x-show="expanded" class="space-y-1">
+                                        <template x-for="(ev, i) in events" :key="i">
+                                            <div>
+                                                <template x-if="ev.type === 'agent_start' || ev.type === 'status'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+                                                        <span class="h-1 w-1 rounded-full bg-zinc-600"></span>
+                                                        <span x-text="ev.message"></span>
+                                                    </div>
+                                                </template>
+                                                <template x-if="ev.type === 'tool_call'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                                                        <i data-lucide="wrench" class="h-2.5 w-2.5"></i>
+                                                        <span x-text="ev.tool || 'tool'"></span>
+                                                    </div>
+                                                </template>
+                                                <template x-if="ev.type === 'tool_result'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-emerald-500/80">
+                                                        <i data-lucide="check" class="h-2.5 w-2.5"></i>
+                                                        <span x-text="ev.tool || 'tool'"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
                                     {% endif %}
+                                    <div class="text-xs leading-relaxed prose-chat">{{ msg.content|linebreaksbr }}</div>
+                                    <div class="flex items-center gap-3 pt-1">
+                                        {% if msg.agent_events %}
+                                        <button @click="expanded = !expanded"
+                                                class="text-[10px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors">
+                                            <span x-show="!expanded">Show trace</span>
+                                            <span x-show="expanded">Hide trace</span>
+                                        </button>
+                                        {% endif %}
+                                        {% if msg.idea_id %}
+                                        <a href="{% url 'idea_detail' msg.idea_id %}"
+                                           class="flex items-center gap-1.5 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors">
+                                            View full research
+                                            <i data-lucide="arrow-right" class="h-3 w-3"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -122,26 +159,47 @@
                         <template x-for="agentName in Object.keys(groupedStreamEvents)" :key="agentName">
                             <div class="flex gap-3 justify-start">
                                 <div class="shrink-0 mt-1">
-                                    <div class="h-6 w-6 rounded-lg flex items-center justify-center bg-zinc-800">
-                                        <i data-lucide="bot" class="h-3.5 w-3.5 text-zinc-400"></i>
+                                    <div class="h-6 w-6 rounded-lg flex items-center justify-center"
+                                         :class="agentIconClass(agentName)">
+                                        <i :data-lucide="agentIcon(agentName)" class="h-3.5 w-3.5" :class="agentIconColor(agentName)"></i>
                                     </div>
                                 </div>
-                                <div class="max-w-[85%] space-y-1">
+                                <div class="max-w-[85%] space-y-1 flex-1">
                                     <span class="text-[10px] font-medium text-zinc-400 uppercase tracking-wider" x-text="agentName"></span>
-                                    <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3">
+                                    <div class="rounded-2xl bg-zinc-800 border border-white/[0.04] px-4 py-3 space-y-1.5">
+                                        <!-- Status / tool timeline -->
                                         <template x-for="(event, idx) in groupedStreamEvents[agentName]" :key="idx">
-                                            <div class="text-xs text-zinc-300 mb-1">
+                                            <div>
+                                                <template x-if="event.type === 'agent_start' || event.type === 'status'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-zinc-500">
+                                                        <span class="h-1 w-1 rounded-full bg-zinc-600"></span>
+                                                        <span x-text="event.message"></span>
+                                                    </div>
+                                                </template>
                                                 <template x-if="event.type === 'tool_call'">
-                                                    <span class="flex items-center gap-1.5 text-[10px] text-zinc-400">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-zinc-400">
                                                         <i data-lucide="wrench" class="h-2.5 w-2.5"></i>
-                                                        <span x-text="event.tool_name || 'tool'"></span>
-                                                    </span>
+                                                        <span x-text="event.tool || 'tool'"></span>
+                                                        <span class="text-zinc-600">running...</span>
+                                                    </div>
                                                 </template>
-                                                <template x-if="event.type === 'thinking'">
-                                                    <span class="text-[10px] text-zinc-500 italic" x-text="event.content"></span>
+                                                <template x-if="event.type === 'tool_result'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-emerald-500/80">
+                                                        <i data-lucide="check" class="h-2.5 w-2.5"></i>
+                                                        <span x-text="event.tool || 'tool'"></span>
+                                                    </div>
                                                 </template>
-                                                <template x-if="event.type === 'text'">
-                                                    <span x-text="event.content"></span>
+                                                <template x-if="event.type === 'tool_error'">
+                                                    <div class="flex items-center gap-1.5 text-[10px] text-red-400">
+                                                        <i data-lucide="x" class="h-2.5 w-2.5"></i>
+                                                        <span x-text="(event.tool || 'tool') + ' failed'"></span>
+                                                    </div>
+                                                </template>
+                                                <template x-if="event.type === 'agent_end'">
+                                                    <div class="mt-1.5 pt-1.5 border-t border-white/[0.06] text-xs text-zinc-200" x-text="event.message"></div>
+                                                </template>
+                                                <template x-if="event.type === 'error'">
+                                                    <div class="text-xs text-red-400" x-text="'Error: ' + (event.message || 'unknown')"></div>
                                                 </template>
                                             </div>
                                         </template>
@@ -211,6 +269,22 @@ function chatApp() {
 
         init() {
             this.scrollToBottom();
+            // Re-render lucide icons whenever new stream events arrive so the
+            // dynamically-added <i data-lucide="..."> tags turn into SVGs.
+            this.$watch('streamEvents', () => {
+                this.$nextTick(() => {
+                    if (window.lucide) lucide.createIcons();
+                });
+            });
+            // If the dashboard stashed a prompt, pick it up and auto-send.
+            try {
+                const prompt = sessionStorage.getItem('aucctus:quickPrompt');
+                if (prompt) {
+                    sessionStorage.removeItem('aucctus:quickPrompt');
+                    this.input = prompt;
+                    this.$nextTick(() => this.handleSend());
+                }
+            } catch {}
         },
 
         scrollToBottom() {
@@ -229,6 +303,34 @@ function chatApp() {
                 groups[agent].push(event);
             }
             return groups;
+        },
+
+        agentIcon(agent) {
+            switch (agent) {
+                case 'orchestrator': return 'brain';
+                case 'incumbents': return 'search';
+                case 'funding': return 'dollar-sign';
+                case 'growth': return 'trending-up';
+                default: return 'bot';
+            }
+        },
+        agentIconClass(agent) {
+            switch (agent) {
+                case 'orchestrator': return 'bg-purple-500/15';
+                case 'incumbents': return 'bg-blue-500/15';
+                case 'funding': return 'bg-emerald-500/15';
+                case 'growth': return 'bg-orange-500/15';
+                default: return 'bg-zinc-800';
+            }
+        },
+        agentIconColor(agent) {
+            switch (agent) {
+                case 'orchestrator': return 'text-purple-500';
+                case 'incumbents': return 'text-blue-500';
+                case 'funding': return 'text-emerald-500';
+                case 'growth': return 'text-orange-500';
+                default: return 'text-zinc-400';
+            }
         },
 
         async handleSend() {
@@ -301,6 +403,12 @@ function chatApp() {
                         if (!line.startsWith('data: ')) continue;
                         try {
                             const event = JSON.parse(line.slice(6));
+                            // The backend sends a handshake event up-front with the
+                            // session id so a brand-new chat can redirect on finish.
+                            if (event.type === 'session' && event.session_id) {
+                                this.sessionId = String(event.session_id);
+                                continue;
+                            }
                             if (event.type === 'done') continue;
                             this.streamEvents = [...this.streamEvents, event];
                             this.scrollToBottom();
@@ -368,6 +476,22 @@ function chatApp() {
             }
             return '';
         },
+    };
+}
+
+// Per-assistant-message Alpine component for the persisted trace toggle.
+function persistedMessage(pk) {
+    return {
+        expanded: false,
+        events: (() => {
+            const el = document.getElementById('agent-events-' + pk);
+            if (!el) return [];
+            try {
+                return JSON.parse(el.textContent || '[]');
+            } catch {
+                return [];
+            }
+        })(),
     };
 }
 </script>

@@ -1,42 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-
-// ---------------------------------------------------------------------------
-// HTTP helper (mirrors the pattern in brain.ts)
-// ---------------------------------------------------------------------------
-
-async function convexCall(
-  type: "query" | "mutation",
-  path: string,
-  args: Record<string, unknown>
-): Promise<unknown> {
-  const baseUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_CONVEX_URL is not set");
-  }
-
-  const url = `${baseUrl}/api/${type}`;
-  console.info(`[scheduling] convex ${type} ${path}`, { args });
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path, args }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "(no body)");
-    console.error(`[scheduling] convex ${type} ${path} failed`, {
-      status: res.status,
-      body: text,
-    });
-    throw new Error(`Convex ${type} "${path}" failed (${res.status}): ${text}`);
-  }
-
-  const json = await res.json();
-  console.info(`[scheduling] convex ${type} ${path} ok`);
-  return "value" in json ? json.value : json;
-}
+import { convexCall } from "../shared/api";
 
 // ---------------------------------------------------------------------------
 // setMonitoringSchedule

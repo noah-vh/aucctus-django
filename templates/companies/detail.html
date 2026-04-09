@@ -147,9 +147,9 @@
                 <span class="flex items-center gap-2">
                     <i data-lucide="dollar-sign" class="h-3.5 w-3.5 text-zinc-400"></i>
                     Funding History
-                    <span class="text-[10px] font-normal text-zinc-400">{{ funding_events|length }}</span>
+                    <span class="text-[10px] font-normal text-zinc-400">{{ funding|length }}</span>
                 </span>
-                {% if funding_events|length > 4 %}
+                {% if funding|length > 4 %}
                 <button @click="expanded = !expanded" class="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors">
                     <span x-text="expanded ? 'Show less' : 'View all'"></span>
                 </button>
@@ -157,9 +157,9 @@
             </h3>
         </div>
         <div class="px-4 pb-4">
-            {% if funding_events %}
+            {% if funding %}
             <div class="space-y-2">
-                {% for event in funding_events %}
+                {% for event in funding %}
                 <div {% if forloop.counter > 4 %}x-show="expanded" x-transition{% endif %}
                      class="flex items-center justify-between gap-2 rounded-xl bg-zinc-800 border border-white/[0.04] p-3">
                     <div class="min-w-0">
@@ -170,17 +170,12 @@
                             {% endif %}
                         </div>
                         {% if event.lead_investor %}
-                        <p class="text-[10px] text-zinc-400 mt-0.5">
-                            Lead: <a href="{% url 'investor_detail' event.lead_investor_id %}" class="hover:text-white transition-colors">{{ event.lead_investor }}</a>
-                        </p>
+                        <p class="text-[10px] text-zinc-400 mt-0.5">Lead: {{ event.lead_investor }}</p>
                         {% endif %}
-                        {% if event.investors %}
+                        {% if event.co_investors %}
                         <div class="flex flex-wrap gap-1 mt-1">
-                            {% for investor in event.investors %}
-                            <a href="{% url 'investor_detail' investor.pk %}"
-                               class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300 hover:text-white transition-colors">
-                                {{ investor.name }}
-                            </a>
+                            {% for name in event.co_investors %}
+                            <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">{{ name }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -193,6 +188,118 @@
             </div>
             {% else %}
             <p class="text-xs text-zinc-400 py-3 text-center">No funding events recorded</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tech Stack -->
+    {% if company.technology_stack %}
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="code-2" class="h-3.5 w-3.5 text-zinc-400"></i>
+                Tech Stack
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            <div class="flex flex-wrap gap-1.5">
+                {% for tech in company.technology_stack %}
+                <span class="inline-flex items-center rounded-md bg-zinc-800 border border-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300">{{ tech }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key People -->
+    {% if company.key_people %}
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden">
+        <div class="p-4 pb-3">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="users" class="h-3.5 w-3.5 text-zinc-400"></i>
+                Key People
+            </h3>
+        </div>
+        <div class="px-4 pb-4 space-y-2">
+            {% for person in company.key_people %}
+            <div class="flex items-center justify-between rounded-md border border-white/[0.06] p-2">
+                <span class="text-xs font-medium">{{ person.name }}</span>
+                <span class="text-[10px] text-zinc-400">{{ person.role }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Metrics -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden lg:col-span-2">
+        <div class="p-4 pb-2">
+            <h3 class="text-sm font-semibold flex items-center justify-between">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="h-3.5 w-3.5 text-zinc-400"></i>
+                    Metrics
+                </span>
+                <span class="text-[10px] font-normal text-zinc-400">{{ metrics|length }}</span>
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if metrics %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {% for m in metrics %}
+                <div class="rounded-md border border-white/[0.06] p-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-zinc-400 capitalize">{{ m.metric_type|cut:"_" }}</span>
+                        <span class="text-[10px] text-zinc-500">{{ m.date }}</span>
+                    </div>
+                    <p class="text-xs font-mono mt-0.5">
+                        {{ m.value|floatformat }}{% if m.unit %} {{ m.unit }}{% endif %}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-6 text-center text-zinc-400">
+                <i data-lucide="bar-chart-3" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-xs">No metrics tracked yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity -->
+    <div class="rounded-xl border border-white/[0.04] bg-card overflow-hidden lg:col-span-2">
+        <div class="p-4 pb-2">
+            <h3 class="text-sm font-semibold flex items-center justify-between">
+                <span class="flex items-center gap-2">
+                    <i data-lucide="activity" class="h-3.5 w-3.5 text-zinc-400"></i>
+                    Activity
+                </span>
+                <span class="text-[10px] font-normal text-zinc-400">{{ activity|length }}</span>
+            </h3>
+        </div>
+        <div class="px-4 pb-4">
+            {% if activity %}
+            <div class="space-y-2">
+                {% for entry in activity %}
+                <div class="flex items-start gap-3 rounded-md border border-white/[0.06] p-2.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs">{{ entry.description }}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="inline-flex items-center rounded-md bg-zinc-700 px-1.5 py-0.5 text-[10px] capitalize text-zinc-300">
+                                {{ entry.activity_type|cut:"_" }}
+                            </span>
+                            <span class="text-[10px] text-zinc-400">{{ entry.created_at|date:"M j, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="py-6 text-center text-zinc-400">
+                <i data-lucide="activity" class="h-8 w-8 mx-auto mb-2 opacity-30"></i>
+                <p class="text-xs">No activity yet</p>
+            </div>
             {% endif %}
         </div>
     </div>

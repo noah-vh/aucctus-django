@@ -42,7 +42,7 @@ class BrainService:
             company = Company.objects.select_for_update().get(name=name, idea_id=idea_id)
             logger.info(
                 "upsert_company: updating existing company",
-                extra={"company_id": company.pk, "idea_id": idea_id, "name": name},
+                extra={"company_id": company.pk, "idea_id": idea_id, "company_name": name},
             )
             # Only overwrite optional fields when incoming value is not None
             for field in (
@@ -72,7 +72,7 @@ class BrainService:
         except Company.DoesNotExist:
             logger.info(
                 "upsert_company: creating new company",
-                extra={"idea_id": idea_id, "name": name},
+                extra={"idea_id": idea_id, "company_name": name},
             )
             company = Company.objects.create(
                 idea_id=idea_id,

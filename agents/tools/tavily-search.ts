@@ -1,7 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { tavily } from "@tavily/core";
-import { TAVILY_API_KEY } from "../../shared/config";
+import { TAVILY_API_KEY } from "../shared/config";
 
 const parameters = Type.Object({
   query: Type.String({ description: "The search query" }),

@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config as env_config
+
+import dj_database_url
+from decouple import Csv, config as env_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +28,16 @@ SECRET_KEY = env_config("SECRET_KEY", default="django-insecure-3(^f_*#*b*+816@!y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS accepts a comma-separated list; "*" in dev, locked down in prod.
+ALLOWED_HOSTS = env_config("ALLOWED_HOSTS", default="*", cast=Csv())
+
+# Any deployment host that serves this app over HTTPS must appear in
+# CSRF_TRUSTED_ORIGINS (with scheme) so the chat POST doesn't 403.
+CSRF_TRUSTED_ORIGINS = env_config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://localhost:8001,http://127.0.0.1:8001,http://noahs-macbook-pro:8001",
+    cast=Csv(),
+)
 
 
 # Application definition
@@ -48,6 +59,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Whitenoise serves compiled static files in production. Must sit right
+    # after SecurityMiddleware per the whitenoise docs.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
@@ -80,12 +94,35 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database: DATABASE_URL drives everything. If unset we fall back to SQLite
+# for local development. Railway/Render/Fly/Heroku all inject DATABASE_URL
+# automatically when you attach a managed Postgres.
+_database_url = env_config("DATABASE_URL", default="")
+
+if _database_url:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            _database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            # The agent service writes from 4 parallel agents. SQLite's default
+            # rollback journal serializes writes hard and we get "database is
+            # locked" under contention. WAL mode lets readers and writers
+            # coexist; the long timeout absorbs short bursts of write contention.
+            "OPTIONS": {
+                "timeout": 30,
+                "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+                "transaction_mode": "IMMEDIATE",
+            },
+        }
+    }
 
 
 # Password validation
@@ -124,6 +161,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# Collected static files for production (`collectstatic` target, served by whitenoise).
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # REST Framework
